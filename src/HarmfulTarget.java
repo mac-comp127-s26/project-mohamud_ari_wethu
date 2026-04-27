@@ -5,8 +5,8 @@ import java.awt.Color;
 import java.util.Random;
 
 public class HarmfulTarget extends GraphicsGroup implements Target {
-    private static final double WIDTH = 90;
-    private static final double HEIGHT = 50;
+    private static final double WIDTH = 65;
+    private static final double HEIGHT = 35;
     private static final Color COLOR = new Color(220, 50, 50);
 
     private double dx;

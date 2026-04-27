@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.util.Random;
 
 public class LifeOnEarthTarget extends GraphicsGroup implements Target {
-    private static final double RADIUS = 20;
+    private static final double RADIUS = 14;
     private static final Color COLOR = new Color(30, 144, 255);
 
     private double dx;

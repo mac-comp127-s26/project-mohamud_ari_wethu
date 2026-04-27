@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.util.Random;
 
 public class ExtraLivesTarget extends GraphicsGroup implements Target {
-    private static final double RADIUS = 20;
+    private static final double RADIUS = 14;
     private static final Color COLOR = new Color(0, 200, 0);
 
     private double dx;

@@ -1,66 +1,29 @@
-import edu.macalester.graphics.Line;
+import edu.macalester.graphics.GraphicsGroup;
+import edu.macalester.graphics.Rectangle;
 
-public class Gun {
-    // The bullets will be coming out of this gun, which means it will use the bullet class {abstraction}.
+import java.awt.Color;
 
-    public static final double GUN_LENGTH = 25;
+public class Gun extends GraphicsGroup {
+    private static final double BODY_WIDTH = 50;
+    private static final double BODY_HEIGHT = 20;
+    private static final double BARREL_WIDTH = 10;
+    private static final double BARREL_HEIGHT = 30;
 
-    private final Line line;
-    private double angle;
+    public Gun(double x, double y) {
+        setPosition(x, y);
 
-    public Gun(double centerX, double centerY, double angleDegrees) {
-        if (angleDegrees < 0 || angleDegrees > 180) {
-            throw new IllegalArgumentException("angleDegrees must be an angle between 0 and 180 degrees");
-        }
-        line = new Line(centerX, centerY, centerX, centerY-GUN_LENGTH);
-        line.setStrokeWidth(5);
-        setAngle(angleDegrees);
-    }
+        Rectangle body = new Rectangle(0, 0, BODY_WIDTH, BODY_HEIGHT);
+        body.setFillColor(Color.DARK_GRAY);
+        add(body);
 
-    public Line getLine() {
-        return line;
-    }
-
-    public double getAngle() {
-        return angle;
-    }
-
-    public void setAngle(double angleDegrees) {
-        if (angleDegrees < 0 || angleDegrees > 180) {
-            return;
-        }
-
-        this.angle = angleDegrees;
-
-        double angleRadians = Math.toRadians(angleDegrees);
-
-        double startX = line.getX1();
-        double startY = line.getY1();
-
-        double endX = startX + GUN_LENGTH * Math.cos(angleRadians);
-        double endY = startY - GUN_LENGTH * Math.sin(angleRadians);
-
-        line.setPosition(endX, endY);
-    }
-
-    public void rotateLeft() {
-        setAngle(angle + 5);
-    }
-
-    public void rotateRight() {
-        setAngle(angle - 5);
+        Rectangle barrel = new Rectangle((BODY_WIDTH - BARREL_WIDTH) / 2, -BARREL_HEIGHT, BARREL_WIDTH, BARREL_HEIGHT);
+        barrel.setFillColor(new Color(80, 80, 80));
+        add(barrel);
     }
 
     public Bullet shoot() {
-        double angleRadians = Math.toRadians(angle);
-
-        double startX = line.getX1();
-        double startY = line.getY1();
-
-        double endX = startX + GUN_LENGTH * Math.cos(angleRadians);
-        double endY = startY - GUN_LENGTH * Math.sin(angleRadians);
-
-        return new Bullet(endX, endY, angle);
+        double bulletX = getX() + (BODY_WIDTH - 8) / 2;
+        double bulletY = getY() - BARREL_HEIGHT - 8;
+        return new Bullet(bulletX, bulletY, 8);
     }
 }
-

@@ -36,4 +36,5 @@ public class Bullet extends Ellipse {
     public void setVelocity(double dy) {
         this.dy = dy;
     }
+
 }
