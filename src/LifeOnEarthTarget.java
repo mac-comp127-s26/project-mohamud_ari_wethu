@@ -35,4 +35,6 @@ public class LifeOnEarthTarget extends GraphicsGroup implements Target {
     public int getPointValue() {
         return 5;
     }
+
+    
 }
