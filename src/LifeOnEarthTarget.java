@@ -33,6 +33,7 @@ public class LifeOnEarthTarget extends GraphicsGroup implements Target {
     }
 
     @Override
+    //Circle-circle collision detection
     public boolean intersects(Bullet bullet) {
         double bulletCenterX = bullet.getX() + bullet.getWidth() / 2;
         double bulletCenterY = bullet.getY() + bullet.getHeight() / 2;

@@ -34,6 +34,7 @@ public class HarmfulTarget extends GraphicsGroup implements Target {
     }
 
     @Override
+    // Circle-rectangle collision detection
     public boolean intersects(Bullet bullet) {
         double bulletCenterX = bullet.getX() + bullet.getWidth() / 2;
         double bulletCenterY = bullet.getY() + bullet.getHeight() / 2;
