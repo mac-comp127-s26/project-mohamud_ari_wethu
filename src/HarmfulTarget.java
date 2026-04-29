@@ -1,6 +1,7 @@
 import edu.macalester.graphics.GraphicsGroup;
 import edu.macalester.graphics.Rectangle;
 
+
 import java.awt.Color;
 import java.util.Random;
 
@@ -33,7 +34,15 @@ public class HarmfulTarget extends GraphicsGroup implements Target {
         else if (getY() + h > upperBound) { setY(upperBound - h); dy = -dy; }
     }
 
+
     public int getPointValue() {
         return 10;
     }
 }
+
+
+
+    
+
+
+
