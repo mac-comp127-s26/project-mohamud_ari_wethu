@@ -34,6 +34,26 @@ public class HarmfulTarget extends GraphicsGroup implements Target {
         else if (getY() + h > upperBound) { setY(upperBound - h); dy = -dy; }
     }
 
+    @Override
+    public boolean intersects(Bullet bullet) {
+        double bulletCenterX = bullet.getX() + bullet.getWidth() / 2;
+        double bulletCenterY = bullet.getY() + bullet.getHeight() / 2;
+
+        double rectLeft   = getX();
+        double rectRight  = getX() + getWidth();
+        double rectTop    = getY();
+        double rectBottom = getY() + getHeight();
+
+        double closestX = Math.max(rectLeft,  Math.min(bulletCenterX, rectRight));
+        double closestY = Math.max(rectTop,   Math.min(bulletCenterY, rectBottom));
+
+        double distX = bulletCenterX - closestX;
+        double distY = bulletCenterY - closestY;
+        double radius = bullet.getWidth() / 2;
+
+        return (distX * distX + distY * distY) < (radius * radius);
+    }
+
     public int getPointValue() {
         return 10;
     }
