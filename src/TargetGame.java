@@ -62,15 +62,33 @@ public class TargetGame {
             for (Target target : targets) {
                 target.move(CANVAS_WIDTH, UPPER_BOUND);
             }
-            List<Bullet> offScreen = new ArrayList<>();
+
+            List<Bullet> bulletsToRemove = new ArrayList<>();
+            List<Target> targetsToRemove = new ArrayList<>();
+
             for (Bullet b : bullets) {
                 b.move();
                 if (b.getY() + b.getHeight() < 0) {
-                    canvas.remove(b);
-                    offScreen.add(b);
+                    bulletsToRemove.add(b);
+                    continue;
+                }
+                for (Target t : targets) {
+                    if (!targetsToRemove.contains(t) && t.intersects(b)) {
+                        bulletsToRemove.add(b);
+                        targetsToRemove.add(t);
+                        break;
+                    }
                 }
             }
-            bullets.removeAll(offScreen);
+
+            for (Bullet b : bulletsToRemove) {
+                canvas.remove(b);
+            }
+            for (Target t : targetsToRemove) {
+                canvas.remove((edu.macalester.graphics.GraphicsGroup) t);
+            }
+            bullets.removeAll(bulletsToRemove);
+            targets.removeAll(targetsToRemove);
         });
     }
 
