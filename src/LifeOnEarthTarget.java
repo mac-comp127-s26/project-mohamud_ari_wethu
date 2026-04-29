@@ -32,6 +32,21 @@ public class LifeOnEarthTarget extends GraphicsGroup implements Target {
         else if (getY() + h > upperBound) { setY(upperBound - h); dy = -dy; }
     }
 
+    @Override
+    public boolean intersects(Bullet bullet) {
+        double bulletCenterX = bullet.getX() + bullet.getWidth() / 2;
+        double bulletCenterY = bullet.getY() + bullet.getHeight() / 2;
+
+        double targetCenterX = getX() + getWidth() / 2;
+        double targetCenterY = getY() + getHeight() / 2;
+
+        double distX = bulletCenterX - targetCenterX;
+        double distY = bulletCenterY - targetCenterY;
+        double combinedRadius = bullet.getWidth() / 2 + getWidth() / 2;
+
+        return (distX * distX + distY * distY) < (combinedRadius * combinedRadius);
+    }
+
     public int getPointValue() {
         return 5;
     }
