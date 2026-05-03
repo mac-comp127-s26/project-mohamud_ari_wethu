@@ -36,6 +36,7 @@ public class TargetGame {
     private GraphicsText harmfulCountText;
     private GraphicsText speedText;
     private GraphicsGroup overlay;
+    private List<HitEffect> animations;
 
     public TargetGame() {
         canvas = new CanvasWindow("Environmental Awareness Target", CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -45,6 +46,7 @@ public class TargetGame {
 
         bullets = new ArrayList<>();
         targets = new ArrayList<>();
+        animations = new ArrayList<>();
         lives = MAX_LIVES;
         score = 0;
         wave = 1;
@@ -136,7 +138,9 @@ public class TargetGame {
                 for (Target t : targets) {
                     if (!targetsToRemove.contains(t) && t.intersects(b)) {
                         bulletsToRemove.add(b);
-                        targetsToRemove.add(t);
+                        if (!(t instanceof LifeOnEarthTarget)) {
+                            targetsToRemove.add(t);
+                        }
                         handleTargetHit(t);
                         break;
                     }
@@ -152,20 +156,41 @@ public class TargetGame {
                 updateHarmfulCount();
                 checkWin();
             }
+
+            // Tick all hit animations; remove finished ones
+            List<HitEffect> doneEffects = new ArrayList<>();
+            for (HitEffect e : animations) {
+                e.update();
+                if (e.isDone()) doneEffects.add(e);
+            }
+            for (HitEffect e : doneEffects) canvas.remove(e);
+            animations.removeAll(doneEffects);
         });
     }
 
     private void handleTargetHit(Target t) {
+        GraphicsGroup g = (GraphicsGroup) t;
+        double cx = g.getX() + g.getWidth() / 2;
+        double cy = g.getY() + g.getHeight() / 2;
+
+        HitEffect.Type effectType;
         if (t instanceof HarmfulTarget) {
             score += 10;
             scoreText.setText("Score: " + score);
+            effectType = HitEffect.Type.HARMFUL;
         } else if (t instanceof LifeOnEarthTarget) {
             score = Math.max(0, score - 5);
             scoreText.setText("Score: " + score);
             loseLife();
-        } else if (t instanceof ExtraLivesTarget) {
+            effectType = HitEffect.Type.LIFE_EARTH;
+        } else {
             gainLife();
+            effectType = HitEffect.Type.EXTRA_LIFE;
         }
+
+        HitEffect effect = new HitEffect(cx, cy, effectType);
+        animations.add(effect);
+        canvas.add(effect);
     }
 
     private void updateHarmfulCount() {
@@ -200,7 +225,7 @@ public class TargetGame {
         }
 
         for (int i = 0; i < 3; i++) {
-            double x = rand.nextDouble() * (CANVAS_WIDTH - 45);
+            double x = rand.nextDouble() * (CANVAS_WIDTH - 75);
             double y = rand.nextDouble() * (UPPER_BOUND - 45);
             LifeOnEarthTarget t = new LifeOnEarthTarget(x, y);
             targets.add(t);
@@ -264,6 +289,7 @@ public class TargetGame {
         canvas.add(overlay);
     }
 
+    // Similar to showWin but with different text/colors
     private void showGameOver() {
         overlay = new GraphicsGroup();
 
@@ -289,13 +315,16 @@ public class TargetGame {
         canvas.add(overlay);
     }
 
+    // Resets game state and UI for a new game or next wave
     private void restartGame() {
         canvas.remove(overlay);
         overlay = null;
 
+        // Remove all existing targets and bullets
         for (Target t : targets) canvas.remove((GraphicsGroup) t);
         targets.clear();
 
+        // Remove bullets after targets so we don't accidentally remove targets that were just added
         for (Bullet b : bullets) canvas.remove(b);
         bullets.clear();
 
@@ -304,6 +333,9 @@ public class TargetGame {
         speedLevel = 1;
         gameOver = false;
         playerWon = false;
+
+        for (HitEffect e : animations) canvas.remove(e);
+        animations.clear();
 
         createTargets();
 
@@ -314,11 +346,13 @@ public class TargetGame {
         canvas.remove(livesText);
         canvas.remove(speedText);
 
+        // Update HUD text to reflect reset state
         waveText.setText("Wave: " + wave);
         livesText.setText("Lives: " + lives);
         scoreText.setText("Score: " + score);
         speedText.setText("Speed: Lv.1");
 
+        // Add HUD back after targets so it renders on top
         canvas.add(waveText);
         canvas.add(harmfulCountText);
         canvas.add(scoreText);
@@ -328,6 +362,7 @@ public class TargetGame {
         updateHarmfulCount();
     }
 
+    // Moves the gun horizontally to follow the mouse, keeping it within canvas bounds
     private void moveGunTo(double mouseX) {
         double x = mouseX - gun.getWidth() / 2;
         gun.setX(Math.max(0, Math.min(CANVAS_WIDTH - gun.getWidth(), x)));

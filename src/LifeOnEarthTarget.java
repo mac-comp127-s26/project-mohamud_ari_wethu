@@ -7,7 +7,8 @@ import java.awt.Font;
 import java.util.Random;
 
 public class LifeOnEarthTarget extends GraphicsGroup implements Target {
-    private static final double SIZE = 45;
+    private static final double WIDTH = 75;
+    private static final double HEIGHT = 45;
     private static final Color COLOR = new Color(30, 144, 255);
 
     private double dx;
@@ -15,11 +16,11 @@ public class LifeOnEarthTarget extends GraphicsGroup implements Target {
 
     public LifeOnEarthTarget(double x, double y) {
         setPosition(x, y);
-        Rectangle square = new Rectangle(0, 0, SIZE, SIZE);
-        square.setFillColor(COLOR);
-        add(square);
+        Rectangle rect = new Rectangle(0, 0, WIDTH, HEIGHT);
+        rect.setFillColor(COLOR);
+        add(rect);
 
-        GraphicsText label = new GraphicsText("L", SIZE / 2 - 6, SIZE / 2 + 8);
+        GraphicsText label = new GraphicsText("L", WIDTH / 2 - 6, HEIGHT / 2 + 8);
         label.setFillColor(Color.WHITE);
         label.setFont(new Font("Arial", Font.BOLD, 20));
         add(label);
