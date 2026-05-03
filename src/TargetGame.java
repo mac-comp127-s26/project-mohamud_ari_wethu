@@ -15,15 +15,27 @@ public class TargetGame {
     private static final int CANVAS_HEIGHT = 800;
     private static final double UPPER_BOUND = CANVAS_HEIGHT / 2.0;
     private static final int MAX_LIVES = 3;
+    private static final int SPEED_RAMP_INTERVAL = 600; // ~10 seconds at 60fps
 
     private CanvasWindow canvas;
     private Gun gun;
     private List<Bullet> bullets;
     private List<Target> targets;
+
     private int lives;
-    private GraphicsText livesText;
+    private int score;
+    private int wave;
+    private int frameCount;
+    private int speedLevel;
     private boolean gameOver;
-    private GraphicsGroup gameOverOverlay;
+    private boolean playerWon;
+
+    private GraphicsText livesText;
+    private GraphicsText scoreText;
+    private GraphicsText waveText;
+    private GraphicsText harmfulCountText;
+    private GraphicsText speedText;
+    private GraphicsGroup overlay;
 
     public TargetGame() {
         canvas = new CanvasWindow("Environmental Awareness Target", CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -34,19 +46,45 @@ public class TargetGame {
         bullets = new ArrayList<>();
         targets = new ArrayList<>();
         lives = MAX_LIVES;
+        score = 0;
+        wave = 1;
+        frameCount = 0;
+        speedLevel = 1;
         gameOver = false;
+        playerWon = false;
+
+        waveText = new GraphicsText("Wave: 1", 10, 25);
+        waveText.setFont(new Font("Arial", Font.BOLD, 18));
+        waveText.setFillColor(Color.BLACK);
+
+        harmfulCountText = new GraphicsText("Enemies: 0", 200, 25);
+        harmfulCountText.setFont(new Font("Arial", Font.BOLD, 18));
+        harmfulCountText.setFillColor(new Color(200, 0, 0));
+
+        scoreText = new GraphicsText("Score: 0", 460, 25);
+        scoreText.setFont(new Font("Arial", Font.BOLD, 18));
+        scoreText.setFillColor(new Color(0, 120, 0));
 
         livesText = new GraphicsText("Lives: " + lives, 10, CANVAS_HEIGHT - 15);
         livesText.setFont(new Font("Arial", Font.BOLD, 20));
         livesText.setFillColor(Color.BLACK);
 
-        createTargets();
-        canvas.add(livesText); // added last so it always renders on top
+        speedText = new GraphicsText("Speed: Lv.1", 390, CANVAS_HEIGHT - 15);
+        speedText.setFont(new Font("Arial", Font.BOLD, 18));
+        speedText.setFillColor(new Color(130, 0, 200));
 
-        // Gun follows the mouse
+        createTargets();
+
+        canvas.add(waveText);
+        canvas.add(harmfulCountText);
+        canvas.add(scoreText);
+        canvas.add(livesText);
+        canvas.add(speedText);
+
+        updateHarmfulCount();
+
         canvas.onMouseMove(e -> moveGunTo(e.getPosition().getX()));
 
-        // Click to shoot
         canvas.onMouseDown(e -> {
             if (gameOver) return;
             Bullet bullet = gun.shoot();
@@ -54,10 +92,15 @@ public class TargetGame {
             canvas.add(bullet);
         });
 
-        // Y to restart, N to quit after game over
         canvas.onKeyDown(e -> {
             if (!gameOver) return;
             if (e.getKey() == Key.Y) {
+                if (playerWon) {
+                    wave++;           // advance to harder wave on win
+                } else {
+                    wave = 1;         // reset wave on loss
+                    score = 0;
+                }
                 restartGame();
             } else if (e.getKey() == Key.N) {
                 canvas.closeWindow();
@@ -66,6 +109,16 @@ public class TargetGame {
 
         canvas.animate(() -> {
             if (gameOver) return;
+
+            // Speed ramp: targets get 15% faster every ~10 seconds
+            frameCount++;
+            if (frameCount % SPEED_RAMP_INTERVAL == 0) {
+                speedLevel++;
+                speedText.setText("Speed: Lv." + speedLevel);
+                for (Target t : targets) {
+                    t.multiplySpeed(1.15);
+                }
+            }
 
             for (Target target : targets) {
                 target.move(CANVAS_WIDTH, UPPER_BOUND);
@@ -84,9 +137,7 @@ public class TargetGame {
                     if (!targetsToRemove.contains(t) && t.intersects(b)) {
                         bulletsToRemove.add(b);
                         targetsToRemove.add(t);
-                        if (t instanceof LifeOnEarthTarget) {
-                            loseLife();
-                        }
+                        handleTargetHit(t);
                         break;
                     }
                 }
@@ -96,23 +147,61 @@ public class TargetGame {
             for (Target t : targetsToRemove) canvas.remove((GraphicsGroup) t);
             bullets.removeAll(bulletsToRemove);
             targets.removeAll(targetsToRemove);
+
+            if (!targetsToRemove.isEmpty()) {
+                updateHarmfulCount();
+                checkWin();
+            }
         });
+    }
+
+    private void handleTargetHit(Target t) {
+        if (t instanceof HarmfulTarget) {
+            score += 10;
+            scoreText.setText("Score: " + score);
+        } else if (t instanceof LifeOnEarthTarget) {
+            score = Math.max(0, score - 5);
+            scoreText.setText("Score: " + score);
+            loseLife();
+        } else if (t instanceof ExtraLivesTarget) {
+            gainLife();
+        }
+    }
+
+    private void updateHarmfulCount() {
+        long count = targets.stream()
+            .filter(t -> t instanceof HarmfulTarget)
+            .count();
+        harmfulCountText.setText("Enemies: " + count);
+    }
+
+    private void checkWin() {
+        if (gameOver) return;
+        long harmfulRemaining = targets.stream()
+            .filter(t -> t instanceof HarmfulTarget)
+            .count();
+        if (harmfulRemaining == 0) {
+            playerWon = true;
+            gameOver = true;
+            showWin();
+        }
     }
 
     private void createTargets() {
         Random rand = new Random();
+        int harmfulCount = Math.min(3 + (wave - 1), 7); // 3–7 enemies based on wave
 
-        for (int i = 0; i < 3; i++) {
-            double x = rand.nextDouble() * (CANVAS_WIDTH - 65);
-            double y = rand.nextDouble() * (UPPER_BOUND - 35);
+        for (int i = 0; i < harmfulCount; i++) {
+            double x = rand.nextDouble() * (CANVAS_WIDTH - 40);
+            double y = rand.nextDouble() * (UPPER_BOUND - 40);
             HarmfulTarget t = new HarmfulTarget(x, y);
             targets.add(t);
             canvas.add(t);
         }
 
         for (int i = 0; i < 3; i++) {
-            double x = rand.nextDouble() * (CANVAS_WIDTH - 28);
-            double y = rand.nextDouble() * (UPPER_BOUND - 28);
+            double x = rand.nextDouble() * (CANVAS_WIDTH - 45);
+            double y = rand.nextDouble() * (UPPER_BOUND - 45);
             LifeOnEarthTarget t = new LifeOnEarthTarget(x, y);
             targets.add(t);
             canvas.add(t);
@@ -125,41 +214,84 @@ public class TargetGame {
             targets.add(t);
             canvas.add(t);
         }
+
+        // Each wave beyond 1 starts with faster targets (+25% per wave)
+        if (wave > 1) {
+            double waveMult = 1.0 + (wave - 1) * 0.25;
+            for (Target t : targets) {
+                t.multiplySpeed(waveMult);
+            }
+        }
     }
 
     private void loseLife() {
         lives--;
         livesText.setText("Lives: " + lives);
-        if (lives <= 0) {
+        if (lives <= 0 && !gameOver) {
+            gameOver = true;
+            playerWon = false;
             showGameOver();
         }
     }
 
-    private void showGameOver() {
-        gameOver = true;
+    private void gainLife() {
+        lives++;
+        livesText.setText("Lives: " + lives);
+    }
 
-        gameOverOverlay = new GraphicsGroup();
+    private void showWin() {
+        overlay = new GraphicsGroup();
 
-        Rectangle bg = new Rectangle(0, 250, CANVAS_WIDTH, 220);
-        bg.setFillColor(new Color(0, 0, 0, 200));
-        gameOverOverlay.add(bg);
+        Rectangle bg = new Rectangle(0, 230, CANVAS_WIDTH, 290);
+        bg.setFillColor(new Color(0, 80, 0, 210));
+        overlay.add(bg);
 
-        GraphicsText title = new GraphicsText("GAME OVER", 120, 340);
-        title.setFont(new Font("Arial", Font.BOLD, 52));
-        title.setFillColor(Color.RED);
-        gameOverOverlay.add(title);
+        GraphicsText title = new GraphicsText("YOU WIN!", 155, 325);
+        title.setFont(new Font("Arial", Font.BOLD, 56));
+        title.setFillColor(new Color(255, 220, 0));
+        overlay.add(title);
 
-        GraphicsText prompt = new GraphicsText("Restart? Press Y (yes) or N (no)", 90, 410);
+        GraphicsText waveCleared = new GraphicsText("Wave " + wave + " cleared!   Score: " + score, 80, 385);
+        waveCleared.setFont(new Font("Arial", Font.BOLD, 22));
+        waveCleared.setFillColor(Color.WHITE);
+        overlay.add(waveCleared);
+
+        GraphicsText prompt = new GraphicsText("Y = Next Wave      N = Quit", 105, 445);
         prompt.setFont(new Font("Arial", Font.PLAIN, 22));
         prompt.setFillColor(Color.WHITE);
-        gameOverOverlay.add(prompt);
+        overlay.add(prompt);
 
-        canvas.add(gameOverOverlay);
+        canvas.add(overlay);
+    }
+
+    private void showGameOver() {
+        overlay = new GraphicsGroup();
+
+        Rectangle bg = new Rectangle(0, 250, CANVAS_WIDTH, 240);
+        bg.setFillColor(new Color(0, 0, 0, 210));
+        overlay.add(bg);
+
+        GraphicsText title = new GraphicsText("GAME OVER", 105, 340);
+        title.setFont(new Font("Arial", Font.BOLD, 52));
+        title.setFillColor(Color.RED);
+        overlay.add(title);
+
+        GraphicsText finalScore = new GraphicsText("Final Score: " + score, 185, 395);
+        finalScore.setFont(new Font("Arial", Font.BOLD, 24));
+        finalScore.setFillColor(Color.YELLOW);
+        overlay.add(finalScore);
+
+        GraphicsText prompt = new GraphicsText("Y = Restart      N = Quit", 110, 450);
+        prompt.setFont(new Font("Arial", Font.PLAIN, 22));
+        prompt.setFillColor(Color.WHITE);
+        overlay.add(prompt);
+
+        canvas.add(overlay);
     }
 
     private void restartGame() {
-        canvas.remove(gameOverOverlay);
-        gameOverOverlay = null;
+        canvas.remove(overlay);
+        overlay = null;
 
         for (Target t : targets) canvas.remove((GraphicsGroup) t);
         targets.clear();
@@ -168,12 +300,32 @@ public class TargetGame {
         bullets.clear();
 
         lives = MAX_LIVES;
+        frameCount = 0;
+        speedLevel = 1;
         gameOver = false;
+        playerWon = false;
 
         createTargets();
+
+        // Re-add HUD on top so it renders above new targets
+        canvas.remove(waveText);
+        canvas.remove(harmfulCountText);
+        canvas.remove(scoreText);
         canvas.remove(livesText);
-        canvas.add(livesText); // re-add last so it stays on top
+        canvas.remove(speedText);
+
+        waveText.setText("Wave: " + wave);
         livesText.setText("Lives: " + lives);
+        scoreText.setText("Score: " + score);
+        speedText.setText("Speed: Lv.1");
+
+        canvas.add(waveText);
+        canvas.add(harmfulCountText);
+        canvas.add(scoreText);
+        canvas.add(livesText);
+        canvas.add(speedText);
+
+        updateHarmfulCount();
     }
 
     private void moveGunTo(double mouseX) {

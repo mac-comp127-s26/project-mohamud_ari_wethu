@@ -1,7 +1,9 @@
 import edu.macalester.graphics.Ellipse;
 import edu.macalester.graphics.GraphicsGroup;
+import edu.macalester.graphics.GraphicsText;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.util.Random;
 
 public class ExtraLivesTarget extends GraphicsGroup implements Target {
@@ -16,6 +18,12 @@ public class ExtraLivesTarget extends GraphicsGroup implements Target {
         Ellipse circle = new Ellipse(0, 0, RADIUS * 2, RADIUS * 2);
         circle.setFillColor(COLOR);
         add(circle);
+
+        GraphicsText label = new GraphicsText("+", 8, 20);
+        label.setFillColor(Color.WHITE);
+        label.setFont(new Font("Arial", Font.BOLD, 16));
+        add(label);
+
         Random rand = new Random();
         dx = rand.nextBoolean() ? 1.5 : -1.5;
         dy = rand.nextBoolean() ? 1.0 : -1.0;
@@ -45,6 +53,12 @@ public class ExtraLivesTarget extends GraphicsGroup implements Target {
         double combinedRadius = bullet.getWidth() / 2 + getWidth() / 2;
 
         return (distX * distX + distY * distY) < (combinedRadius * combinedRadius);
+    }
+
+    @Override
+    public void multiplySpeed(double factor) {
+        dx *= factor;
+        dy *= factor;
     }
 
     public int getExtraLives() {
