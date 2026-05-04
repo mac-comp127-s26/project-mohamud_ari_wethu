@@ -41,6 +41,7 @@ public class ExtraLivesTarget extends GraphicsGroup implements Target {
     }
 
     @Override
+    // Circle-circle collision detection
     public boolean intersects(Bullet bullet) {
         double bulletCenterX = bullet.getX() + bullet.getWidth() / 2;
         double bulletCenterY = bullet.getY() + bullet.getHeight() / 2;
@@ -56,6 +57,7 @@ public class ExtraLivesTarget extends GraphicsGroup implements Target {
     }
 
     @Override
+    // Extra life targets don't affect speed, so this is a no-op
     public void multiplySpeed(double factor) {
         dx *= factor;
         dy *= factor;

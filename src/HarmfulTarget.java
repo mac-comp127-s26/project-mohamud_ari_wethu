@@ -13,6 +13,7 @@ public class HarmfulTarget extends GraphicsGroup implements Target {
     private double dx;
     private double dy;
 
+    // Constructor takes the TOP-LEFT corner of the target's bounding box
     public HarmfulTarget(double x, double y) {
         setPosition(x, y);
         Ellipse circle = new Ellipse(0, 0, RADIUS * 2, RADIUS * 2);
@@ -57,6 +58,7 @@ public class HarmfulTarget extends GraphicsGroup implements Target {
     }
 
     @Override
+    // Hitting a harmful target doesn't affect speed, so this is a no-op
     public void multiplySpeed(double factor) {
         dx *= factor;
         dy *= factor;

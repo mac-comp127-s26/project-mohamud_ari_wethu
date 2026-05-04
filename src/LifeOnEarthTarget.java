@@ -63,6 +63,7 @@ public class LifeOnEarthTarget extends GraphicsGroup implements Target {
     }
 
     @Override
+    // 
     public void multiplySpeed(double factor) {
         dx *= factor;
         dy *= factor;
