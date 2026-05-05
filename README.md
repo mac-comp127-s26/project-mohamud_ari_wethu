@@ -36,3 +36,10 @@ Shoot all **harmful targets** (red circles) to win the wave. Avoid hitting the b
 | Mouse click | Shoot |
 | Y (after win/game over) | Next wave / Restart |
 | N (after win/game over) | Quit |
+
+
+## Video
+
+Final presentation video describing the game with a playthough as well:
+
+[![Watch the demo](https://img.youtube.com/vi/o69n2QKYses/0.jpg)](https://youtu.be/o69n2QKYses)
