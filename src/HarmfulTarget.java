@@ -60,8 +60,8 @@ public class HarmfulTarget extends GraphicsGroup implements Target {
     @Override
     // Hitting a harmful target doesn't affect speed, so this is a no-op
     public void multiplySpeed(double factor) {
-        dx *= factor;
-        dy *= factor;
+        dx *= factor; // Multiply the speed by the factor (e.g., 1.2 to increase by 20%)
+        dy *= factor; // This way the target will move faster in the same direction after being hit
     }
 
     public int getPointValue() {
