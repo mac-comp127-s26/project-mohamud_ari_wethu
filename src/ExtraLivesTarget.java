@@ -1,0 +1,69 @@
+import edu.macalester.graphics.Ellipse;
+import edu.macalester.graphics.GraphicsGroup;
+import edu.macalester.graphics.GraphicsText;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.util.Random;
+
+public class ExtraLivesTarget extends GraphicsGroup implements Target {
+    private static final double RADIUS = 14;
+    private static final Color COLOR = new Color(0, 200, 0);
+
+    private double dx;
+    private double dy;
+
+    public ExtraLivesTarget(double x, double y) {
+        setPosition(x, y);
+        Ellipse circle = new Ellipse(0, 0, RADIUS * 2, RADIUS * 2);
+        circle.setFillColor(COLOR);
+        add(circle);
+
+        GraphicsText label = new GraphicsText("+", 8, 20);
+        label.setFillColor(Color.WHITE);
+        label.setFont(new Font("Arial", Font.BOLD, 16));
+        add(label);
+
+        Random rand = new Random();
+        dx = rand.nextBoolean() ? 1.5 : -1.5;
+        dy = rand.nextBoolean() ? 1.0 : -1.0;
+    }
+
+    @Override
+    public void move(double canvasWidth, double upperBound) {
+        moveBy(dx, dy);
+        double w = getWidth();
+        double h = getHeight();
+        if (getX() < 0) { setX(0); dx = -dx; }
+        else if (getX() + w > canvasWidth) { setX(canvasWidth - w); dx = -dx; }
+        if (getY() < 0) { setY(0); dy = -dy; }
+        else if (getY() + h > upperBound) { setY(upperBound - h); dy = -dy; }
+    }
+
+    @Override
+    // Circle-circle collision detection
+    public boolean intersects(Bullet bullet) {
+        double bulletCenterX = bullet.getX() + bullet.getWidth() / 2;
+        double bulletCenterY = bullet.getY() + bullet.getHeight() / 2;
+
+        double targetCenterX = getX() + getWidth() / 2;
+        double targetCenterY = getY() + getHeight() / 2;
+
+        double distX = bulletCenterX - targetCenterX;
+        double distY = bulletCenterY - targetCenterY;
+        double combinedRadius = bullet.getWidth() / 2 + getWidth() / 2;
+
+        return (distX * distX + distY * distY) < (combinedRadius * combinedRadius);
+    }
+
+    @Override
+    // Extra life targets don't affect speed, so this is a no-op
+    public void multiplySpeed(double factor) {
+        dx *= factor;
+        dy *= factor;
+    }
+
+    public int getExtraLives() {
+        return 1;
+    }
+}
